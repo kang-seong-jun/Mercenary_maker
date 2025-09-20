@@ -1,10 +1,24 @@
 import { GoogleGenAI, Type, Modality } from "@google/genai";
 import { PartData, Rarity, PartType, Part } from '../types';
 
-if (!process.env.API_KEY) {
-  throw new Error("API_KEY environment variable is not set");
-}
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+// Lazily create the AI client only when needed to avoid crashing the app
+// if the API key isn't set during initial page load.
+const getApiKey = (): string => {
+  // Prefer client-safe import.meta.env, fallback to process.env defined via Vite
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const metaEnv: any = typeof import.meta !== 'undefined' ? (import.meta as any).env : {};
+  const key =
+    metaEnv?.VITE_GEMINI_API_KEY ||
+    metaEnv?.GEMINI_API_KEY ||
+    (process.env.API_KEY as string | undefined) ||
+    (process.env.GEMINI_API_KEY as string | undefined);
+  if (!key) {
+    throw new Error("Gemini API 키가 설정되지 않았습니다. .env에 GEMINI_API_KEY를 설정하거나 환경변수를 주입해 주세요.");
+  }
+  return key;
+};
+
+const getAI = () => new GoogleGenAI({ apiKey: getApiKey() });
 
 const partDataSchema = {
   type: Type.OBJECT,
@@ -32,6 +46,7 @@ const partDataSchema = {
 
 export const generatePartData = async (prompt: string, rarity: Rarity, partType: PartType): Promise<PartData> => {
   try {
+    const ai = getAI();
     const systemInstruction = `당신은 '용병 키우기: AI 연대기' 게임의 게임 마스터 AI입니다. 당신의 임무는 플레이어의 텍스트 프롬프트와 미리 정해진 희귀도를 기반으로 판타지/SF 아이템 파츠를 한국어로 생성하는 것입니다. 당신은 제공된 JSON 스키마를 반드시 준수해야 합니다.
 
     게임 컨텍스트:
@@ -77,6 +92,7 @@ export const generatePartData = async (prompt: string, rarity: Rarity, partType:
 
 export const generatePartImage = async (name: string, description: string, partType: PartType): Promise<string> => {
     try {
+        const ai = getAI();
         const imagePrompt = `고품질 2D 판타지 RPG 아이템 아이콘, 게임 스프라이트. 아이템은 서사적이고 상세해야 합니다. 아이템은 깔끔한 단색 검은색 배경의 중앙에 위치해야 합니다. 아이템 종류: '${partType}'. 아이템 이름: "${name}". 설명: "${description}"`;
 
         const response = await ai.models.generateContent({
@@ -112,6 +128,7 @@ const getBase64FromUrl = (url: string) => {
 
 export const generateCharacterImage = async (parts: Partial<Record<PartType, Part>>): Promise<string> => {
     try {
+        const ai = getAI();
         let descriptionBuilder = "다음 장비 이미지를 참조하여, 이 모든 장비를 착용한 판타지 캐릭터의 일관된 1:1 비율의 정사각형 2D 전신 초상화를 생성해 주세요. 최종 캐릭터 아트는 일관된 스타일이어야 하며 깔끔한 검은색 배경 위에 그려져야 합니다. 캐릭터 설명: ";
         const equippedParts = Object.values(parts).filter(p => p) as Part[];
 
