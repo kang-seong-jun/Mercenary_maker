@@ -1,5 +1,6 @@
 import { initializeApp } from 'firebase/app';
 import { getAnalytics, isSupported, Analytics } from 'firebase/analytics';
+import { getAuth, GoogleAuthProvider } from 'firebase/auth';
 
 const firebaseConfig = {
   apiKey: 'AIzaSyBwepLTvJ8VfCzWITpf2iH2EEqePONTscI',
@@ -23,5 +24,10 @@ isSupported()
   .catch(() => {
     // ignore analytics init errors in unsupported environments
   });
+
+// Auth
+export const auth = getAuth(app);
+auth.languageCode = 'ko';
+export const googleProvider = new GoogleAuthProvider();
 
 
