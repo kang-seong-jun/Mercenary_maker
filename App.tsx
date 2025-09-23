@@ -6,7 +6,7 @@ import BattlePage from './components/BattlePage';
 import { Mercenary } from './types';
 import Header from './components/Header';
 import Landing from './components/Landing';
-import { subscribeAuth } from './services/authService';
+import { subscribeAuth, handleRedirectResult } from './services/authService';
 import { User } from 'firebase/auth';
 
 export type Page = 'creation' | 'list' | 'battle';
@@ -45,8 +45,11 @@ const App: React.FC = () => {
   };
 
   useEffect(() => {
-    const unsub = subscribeAuth((u) => setUser(u));
-    return () => unsub();
+    // 리다이렉트 결과 우선 처리 후 상태 구독
+    handleRedirectResult().finally(() => {
+      const unsub = subscribeAuth((u) => setUser(u));
+      return () => unsub();
+    });
   }, []);
 
   if (!user) {

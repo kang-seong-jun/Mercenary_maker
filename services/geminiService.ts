@@ -10,8 +10,9 @@ const getApiKey = (): string => {
   const key =
     metaEnv?.VITE_GEMINI_API_KEY ||
     metaEnv?.GEMINI_API_KEY ||
-    (process.env.API_KEY as string | undefined) ||
-    (process.env.GEMINI_API_KEY as string | undefined);
+    (process.env.VITE_GEMINI_API_KEY as string | undefined) ||
+    (process.env.GEMINI_API_KEY as string | undefined) ||
+    (process.env.API_KEY as string | undefined);
   if (!key) {
     throw new Error("Gemini API 키가 설정되지 않았습니다. .env에 GEMINI_API_KEY를 설정하거나 환경변수를 주입해 주세요.");
   }

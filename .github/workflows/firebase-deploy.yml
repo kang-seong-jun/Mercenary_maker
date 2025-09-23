@@ -23,6 +23,8 @@ jobs:
 
       - name: Build
         run: npm run build
+        env:
+          VITE_GEMINI_API_KEY: ${{ secrets.VITE_GEMINI_API_KEY }}
 
       - name: Deploy to Firebase Hosting
         run: npx firebase deploy --project mercenary-maker --non-interactive --token "${{ secrets.FIREBASE_TOKEN }}"
