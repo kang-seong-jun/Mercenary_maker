@@ -15,9 +15,13 @@ const Landing: React.FC<LandingProps> = ({ onSignedIn }) => {
     try {
       await signInWithGoogle();
       onSignedIn();
-    } catch (e: unknown) {
-      const message = e instanceof Error ? e.message : '로그인 중 문제가 발생했습니다.';
-      setError(message);
+    } catch (e: any) {
+      const code = e?.code || '';
+      const base = '로그인 중 문제가 발생했습니다.';
+      const detail = code === 'auth/configuration-not-found'
+        ? 'Firebase 콘솔에서 Google 로그인을 활성화하고 Authorized domains를 확인해 주세요.'
+        : e instanceof Error ? e.message : '';
+      setError([base, detail].filter(Boolean).join(' '));
     } finally {
       setLoading(false);
     }
